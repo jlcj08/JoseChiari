@@ -1,0 +1,78 @@
+import re
+
+# Función para validar la fórmula aritmética
+def validar_formula(formula):
+    # Validar que la fórmula solo contenga los símbolos permitidos
+    if not re.match("^[0-9+\-x()/]+$", formula):
+        return False
+    # Validar que la fórmula sea una operación aritmética válida
+    try:
+        eval(formula)
+    except:
+        return False
+    return True
+
+# Función para resolver la fórmula aritmética paso a paso
+def resolver_formula(formula):
+    # Orden de prioridad de las operaciones
+    prioridad = {"+": 1, "-": 1, "x": 2, "/": 2}
+    # Convertir la fórmula en una lista de tokens
+    tokens = re.findall("[0-9]+|[+\-x()/]", formula)
+    # Lista para almacenar los valores y operaciones a medida que se van resolviendo
+    pila = []
+    # Recorrer cada token de la lista
+    for token in tokens:
+        if token in "+-x/":
+            # Realizar las operaciones correspondientes según su prioridad
+            while len(pila) >= 2 and pila[-2] not in "()":
+                if prioridad[token] <= prioridad[pila[-2]]:
+                    a = pila.pop()
+                    operador = pila.pop()
+                    b = pila.pop()
+                    pila.append(str(eval(b + operador + a)))
+                else:
+                    break
+            pila.append(token)
+        elif token == "(":
+            pila.append(token)
+        elif token == ")":
+            # Resolver las operaciones dentro de los paréntesis
+            while len(pila) >= 2 and pila[-2] != "(":
+                a = pila.pop()
+                operador = pila.pop()
+                b = pila.pop()
+                pila.append(str(eval(b + operador + a)))
+            if len(pila) >= 2:
+                pila.pop() # eliminar el "(" sobrante
+        else:
+            pila.append(token)
+    # Resolver las operaciones restantes en la pila
+    while len(pila) >= 2:
+        a = pila.pop()
+        operador = pila.pop()
+        b = pila.pop()
+        pila.append(str(eval(b + operador + a)))
+    # El resultado final estará en el tope de la pila
+    resultado = pila[0]
+    # Imprimir la fórmula y el resultado paso a paso
+    print("Fórmula: ", formula)
+    for i in range(len(tokens)):
+        if i > 0:
+            print(" ", end="")
+        print(tokens[i], end="")
+        if tokens[i] in "+-x/()":
+            print(" ", end="")
+        else:
+            print(" =", end="")
+            if i == len(tokens) - 1:
+                print(" " + resultado)
+            else:
+                print("")
+    print("")
+    
+# Ejemplo de uso
+formula = "3+(4-2)x(1+5)/2"
+if validar_formula(formula):
+    resolver_formula(formula)
+else:
+    print("La fórmula introducida no es válida")
